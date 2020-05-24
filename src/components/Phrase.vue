@@ -1,7 +1,7 @@
 <template>
   <div class="phrase">
     <div class="phrase__tags">
-      <Tag v-bind:key="tag" v-bind:tag="tag" v-for="tag in phrase.tags" />
+      <Tag v-bind:key="tag" v-bind:tag="tag" v-bind:tagTitles="tagTitles" v-for="tag in phrase.tags" />
     </div>
     <div class="text-center">
       <p>{{ phrase.translation }}</p>
@@ -24,24 +24,14 @@ export default {
   components: {
     Tag
   },
-  data: () => ({
-    isPhraseVisible: false
-  }),
   props: {
-    phrase: Object
+    phrase: Object,
+    tagTitles: Object,
+    isPhraseVisible: Boolean
   },
   methods: {
     onContinue: function() {
-      if (!this.isPhraseVisible) {
-        this.isPhraseVisible = true;
-        return;
-      }
       this.$emit("onContinue");
-    }
-  },
-  watch: {
-    phrase: function() {
-      this.isPhraseVisible = false;
     }
   }
 };

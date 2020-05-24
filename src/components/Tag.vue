@@ -1,5 +1,5 @@
 <template>
-  <span class="tag">{{ getPhraseTagText(tag) }}</span>
+  <span class="tag">{{ getPhraseTagText(tag, tagTitles) }}</span>
 </template>
 
 <script>
@@ -10,7 +10,8 @@ export default {
     getPhraseTagText
   },
   props: {
-    tag: String
+    tag: String,
+    tagTitles: Object
   }
 }
 </script>

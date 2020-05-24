@@ -7,23 +7,28 @@
       v-bind:class="{ active: imageIndex === index }"
       v-bind:src="image"
       alt
-    >
+    />
     <Phrase
       v-if="phrases.length"
       v-bind:phrase="phrases[phraseIndex]"
-      v-on:onContinue="increasePhraseIndex"
+      v-bind:tagTitles="tagTitles"
+      v-bind:isPhraseVisible="isPhraseVisible"
+      v-on:onContinue="onContinue"
     />
-    <div
-      class="phrases-cnt"
-    >{{phraseIndex + 1}}/{{phrasesLength}}</div>
+    <div class="phrases-cnt">{{ phraseIndex + 1 }}/{{ phrasesLength }}</div>
     <div class="phrase-tags">
-      <ButtonToggle v-bind:key="tag" v-bind:active="phraseTagsSelected.includes(tag)" v-for="tag in phraseTags" v-bind:title="getPhraseTagText(tag)" v-on:onToggle="togglePhraseTag(tag)" />
+      <ButtonToggle
+        v-bind:key="tag"
+        v-bind:active="phraseTagsSelected.includes(tag)"
+        v-for="tag in phraseTags"
+        v-bind:title="getPhraseTagText(tag, tagTitles)"
+        v-on:onToggle="togglePhraseTag(tag)"
+      />
     </div>
   </div>
 </template>
 
 <script>
-import phrases from "./phrases.js";
 import ButtonToggle from "./components/ButtonToggle.vue";
 import Phrase from "./components/Phrase.vue";
 import { getPhraseTagText } from "./misc.js";
@@ -40,7 +45,7 @@ const BACKGROUND_IMAGES = [
   "images/rawpixel-561415-unsplash.jpg",
   "images/rob-bye-325768-unsplash.jpg",
   "images/sebas-ribas-310260-unsplash.jpg",
-  "images/thought-catalog-214785-unsplash.jpg"
+  "images/thought-catalog-214785-unsplash.jpg",
 ];
 const BG_SWITCH_PHRASES_CNT = 10;
 
@@ -48,41 +53,48 @@ export default {
   name: "app",
   components: {
     ButtonToggle,
-    Phrase
+    Phrase,
   },
   data: function() {
     return {
+      phrasesJson: [],
       phraseIndex: 0,
       phraseTagsSelected: [],
       images: BACKGROUND_IMAGES,
       imageIndex: 0,
+      tagTitles: {},
+      isPhraseVisible: false,
     };
   },
   computed: {
     phrases: function() {
-      if(!this.phrasesAll.length) return [];
-      if(!this.phraseTagsSelected.length) return this.phrasesAll;
-      return this.phrasesAll.filter(phrase => {
-        for(let i=0, len=this.phraseTagsSelected.length; i<len; i++) {
-          if(phrase.tags && phrase.tags.includes(this.phraseTagsSelected[i])) return true;
+      if (!this.phrasesAll.length) return [];
+      if (!this.phraseTagsSelected.length) return this.phrasesAll;
+      return this.phrasesAll.filter((phrase) => {
+        for (let i = 0, len = this.phraseTagsSelected.length; i < len; i++) {
+          if (phrase.tags && phrase.tags.includes(this.phraseTagsSelected[i]))
+            return true;
         }
         return false;
       });
     },
     phrasesAll: function() {
+      if (!this.phrasesJson.length) return [];
+
       //check for duplicates
       const phrasesNoDuplicants = [
-        ...new Set(phrases.map(phrase => phrase.phrase))
+        ...new Set(this.phrasesJson.map((phrase) => phrase.phrase)),
       ];
-      const hasDuplicants = phrasesNoDuplicants.length - phrases.length > 0;
+      const hasDuplicants =
+        phrasesNoDuplicants.length - this.phrasesJson.length > 0;
       // eslint-disable-next-line
       console.log(`Duplicates: ${hasDuplicants ? "yes" : "no"}`);
       // eslint-disable-next-line
       hasDuplicants && console.log(this.getDuplicantPhrases(phrases));
 
       //check for missing translation
-      const phrasesNoTranslation = phrases.filter(
-        phrase => !phrase.translation
+      const phrasesNoTranslation = this.phrasesJson.filter(
+        (phrase) => !phrase.translation
       );
       // eslint-disable-next-line
       console.log(
@@ -94,7 +106,7 @@ export default {
       phrasesNoTranslation.length > 0 && console.log(phrasesNoTranslation);
 
       //check for missimg trailing ./!/?
-      const phrasesMissingTrailingChar = phrases.filter(phrase => {
+      const phrasesMissingTrailingChar = this.phrasesJson.filter((phrase) => {
         return (
           !isTralingChar(phrase.phrase[phrase.phrase.length - 1]) ||
           !isTralingChar(phrase.translation[phrase.translation.length - 1])
@@ -106,34 +118,57 @@ export default {
           phrasesMissingTrailingChar.length > 0 ? "yes" : "no"
         }`
       );
-      // eslint-disable-next-line
-      phrasesMissingTrailingChar.length > 0 && console.log(phrasesMissingTrailingChar);
+      phrasesMissingTrailingChar.length > 0 &&
+        // eslint-disable-next-line
+        console.log(phrasesMissingTrailingChar);
 
-      return shuffle(phrases);
+      return shuffle(this.phrasesJson);
     },
     phrasesLength: function() {
       return this.phrases.length;
     },
     phraseTags: function() {
-      if(!this.phrasesAll) return [];
-      return [...new Set(this.phrasesAll.map(phrase => phrase.tags || []).reduce((acc, tags) => acc.concat(tags), []))]
-    }
+      if (!this.phrasesAll) return [];
+      return [
+        ...new Set(
+          this.phrasesAll
+            .map((phrase) => phrase.tags || [])
+            .reduce((acc, tags) => acc.concat(tags), [])
+        ),
+      ];
+    },
   },
   created: function() {
     this.switchBgImage();
+    this.loadPhrases();
+    this.listenKeyPressing();
   },
   methods: {
     getPhraseTagText,
+    listenKeyPressing: function() {
+      window.addEventListener("keydown", (e) => {
+        const KEYCODE_SPACE = 32;
+        if (e.keyCode !== KEYCODE_SPACE) return;
+        this.onContinue();
+      });
+    },
+    onContinue: function() {
+      if (this.isPhraseVisible) {
+        this.isPhraseVisible = false;
+        this.increasePhraseIndex();
+      } else {
+        this.isPhraseVisible = true;
+      }
+    },
     increasePhraseIndex: function() {
       const maxIndex = this.phrases.length - 1;
       if (this.phraseIndex === maxIndex) return;
       this.phraseIndex++;
-      if (this.phraseIndex % BG_SWITCH_PHRASES_CNT === 0)
-        this.switchBgImage();
+      if (this.phraseIndex % BG_SWITCH_PHRASES_CNT === 0) this.switchBgImage();
     },
     getDuplicantPhrases: function() {
       const phrasesChecked = [];
-      return phrases.filter(phrase => {
+      return this.phrasesJson.filter((phrase) => {
         const isDuplicate = phrasesChecked.includes(phrase.phrase);
         phrasesChecked.push(phrase.phrase);
         return isDuplicate;
@@ -147,14 +182,25 @@ export default {
     togglePhraseTag: function(phraseTag) {
       const phraseTagIndex = this.phraseTagsSelected.indexOf(phraseTag);
       this.phraseIndex = 0;
-      if(phraseTagIndex >= 0) {
+      if (phraseTagIndex >= 0) {
         this.phraseTagsSelected.splice(phraseTagIndex, 1);
-      }
-      else {
+      } else {
         this.phraseTagsSelected = [...this.phraseTagsSelected, phraseTag];
       }
-    }
-  }
+    },
+    loadPhrases: function() {
+      fetch(process.env.VUE_APP_PHRASES_SOURCE)
+        .then((data) => data.json())
+        .then((data) => {
+          this.phrasesJson = data.phrases;
+        });
+      fetch(process.env.VUE_APP_TAGS_SOURCE)
+        .then((data) => data.json())
+        .then((data) => {
+          this.tagTitles = data;
+        });
+    },
+  },
 };
 
 /**

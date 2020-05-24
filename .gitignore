@@ -2,6 +2,10 @@
 node_modules
 /dist
 
+phrases.json
+tagTitles.json
+/screens
+
 # local env files
 .env.local
 .env.*.local
@@ -19,6 +23,3 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw*
-/src/phrases.js
-/src/tagTitles.js
-/screens
