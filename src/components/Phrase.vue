@@ -10,6 +10,7 @@
         <hr>
         <p>{{ phrase.phrase }}</p>
       </div>
+      <button class="button-audio" v-if="shouldPlayAudio && isPhraseVisible" v-on:click="onPlay"><i class="fas fa-volume-up"></i></button>
       <div class="space"/>
       <button class="button-continue" v-on:click="onContinue">{{ isPhraseVisible ? "Continue" : "Show phrase" }}</button>
     </div>
@@ -27,11 +28,41 @@ export default {
   props: {
     phrase: Object,
     tagTitles: Object,
-    isPhraseVisible: Boolean
+    isPhraseVisible: Boolean,
+    shouldPlayAudio: Boolean
+  },
+  created: function() {
+    this.initAudio();
   },
   methods: {
+    initAudio: function() {
+      this.resetAudio();
+      const audio = new Audio();
+      audio.oncanplay = () => {
+        this.audio = audio;
+      }
+      audio.src = `https://ssl.gstatic.com/dictionary/static/sounds/oxford/${this.phrase.phrase.split(" ")[0]}--_gb_1.mp3`;
+    },
+    resetAudio: function() {
+      this.audio = undefined;
+    },
+    playAudio: function() {
+      if(this.audio) this.audio.play()
+    },
     onContinue: function() {
+      if(!this.isPhraseVisible) this.playAudio()
       this.$emit("onContinue");
+    },
+    onPlay: function() {
+      this.playAudio()
+    }
+  },
+  watch: {
+    isPhraseVisible: function(isVisible) {
+      if(isVisible) this.playAudio()
+    },
+    phrase: function() {
+      this.initAudio();
     }
   }
 };

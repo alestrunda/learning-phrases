@@ -13,6 +13,7 @@
       v-bind:phrase="phrases[phraseIndex]"
       v-bind:tagTitles="tagTitles"
       v-bind:isPhraseVisible="isPhraseVisible"
+      v-bind:shouldPlayAudio="settings.audio"
       v-on:onContinue="onContinue"
     />
     <div class="phrases-cnt">{{ phraseIndex + 1 }}/{{ phrasesLength }}</div>
@@ -32,6 +33,8 @@
 import ButtonToggle from "./components/ButtonToggle.vue";
 import Phrase from "./components/Phrase.vue";
 import { getPhraseTagText } from "./misc.js";
+
+import "../node_modules/@fortawesome/fontawesome-free/css/all.min.css"
 
 const BACKGROUND_IMAGES = [
   "images/andyone-26591-unsplash.jpg",
@@ -62,6 +65,7 @@ export default {
       phraseTagsSelected: [],
       images: BACKGROUND_IMAGES,
       imageIndex: 0,
+      settings: {},
       tagTitles: {},
       isPhraseVisible: false,
     };
@@ -193,6 +197,7 @@ export default {
         .then((data) => data.json())
         .then((data) => {
           this.phrasesJson = data.phrases;
+          this.settings = data.settings || {};
         });
       fetch(process.env.VUE_APP_TAGS_SOURCE)
         .then((data) => data.json())
@@ -268,6 +273,25 @@ button:focus {
 
 .bg-image.active {
   opacity: 0.7;
+}
+
+.button-audio {
+  font-family: "Montserrat", sans-serif;
+  font-size: 17px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background-color: #4b92ef;
+  border: 0;
+  border-radius: 50%;
+  z-index: 1;
+  box-shadow: 0 2px 4px 1px rgba(0, 0, 0, 0.4);
 }
 
 .button-continue {
