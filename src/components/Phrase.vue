@@ -41,10 +41,16 @@ export default {
       audio.oncanplay = () => {
         this.audio = audio;
       }
-      audio.src = `https://ssl.gstatic.com/dictionary/static/sounds/oxford/${this.phrase.phrase.split(" ")[0]}--_gb_1.mp3`;
+      audio.src = `https://ssl.gstatic.com/dictionary/static/sounds/oxford/${this.parseAudioString(this.phrase.phrase)}--_gb_1.mp3`;
     },
     resetAudio: function() {
       this.audio = undefined;
+    },
+    parseAudioString: function(phrase) {
+      const regRemoveBrackets = /(\(.+\))?\s?(.*)/g;
+      const parts = regRemoveBrackets.exec(phrase);
+      const phraseWithoutBrackets = parts[parts.length - 1];
+      return phraseWithoutBrackets.split(" ")[0]
     },
     playAudio: function() {
       if(this.audio) this.audio.play()
