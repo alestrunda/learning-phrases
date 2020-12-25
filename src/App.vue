@@ -8,23 +8,37 @@
       v-bind:src="image"
       alt
     />
+    <ButtonToggle
+      class="app-settings-toggle"
+      title="Settings"
+      v-bind:active="isAppSettingsVisibled"
+      v-on:onToggle="toggleAppSettings()"
+    />
     <Phrase
       v-if="phrases.length"
       v-bind:phrase="phrases[phraseIndex]"
       v-bind:tagTitles="tagTitles"
       v-bind:isPhraseVisible="isPhraseVisible"
-      v-bind:shouldPlayAudio="settings.audio"
+      v-bind:shouldPlayAudio="settingsDynamic.audio"
       v-on:onContinue="onContinue"
     />
     <div class="phrases-cnt">{{ phraseIndex + 1 }}/{{ phrasesLength }}</div>
-    <div class="phrase-tags">
-      <ButtonToggle
-        v-bind:key="tag"
-        v-bind:active="phraseTagsSelected.includes(tag)"
-        v-for="tag in phraseTags"
-        v-bind:title="getPhraseTagText(tag, tagTitles)"
-        v-on:onToggle="togglePhraseTag(tag)"
-      />
+    <div class="app-settings" v-if="isAppSettingsVisibled">
+      <div class="container">
+        <ButtonToggle
+          v-bind:title="settingsDynamic.audio ? 'Audio on' : 'Audio off'"
+          v-bind:active="!!settingsDynamic.audio"
+          v-if="settingsStatic.audio"
+          v-on:onToggle="toggleAudio()"
+        />
+        <ButtonToggle
+          v-bind:key="tag"
+          v-bind:active="phraseTagsSelected.includes(tag)"
+          v-bind:title="getPhraseTagText(tag, tagTitles)"
+          v-for="tag in phraseTags"
+          v-on:onToggle="togglePhraseTag(tag)"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -34,7 +48,7 @@ import ButtonToggle from "./components/ButtonToggle.vue";
 import Phrase from "./components/Phrase.vue";
 import { getPhraseTagText } from "./misc.js";
 
-import "../node_modules/@fortawesome/fontawesome-free/css/all.min.css"
+import "../node_modules/@fortawesome/fontawesome-free/css/all.min.css";
 
 const BACKGROUND_IMAGES = [
   "images/andyone-26591-unsplash.jpg",
@@ -65,8 +79,10 @@ export default {
       phraseTagsSelected: [],
       images: BACKGROUND_IMAGES,
       imageIndex: 0,
-      settings: {},
+      settingsDynamic: {},
+      settingsStatic: {},
       tagTitles: {},
+      isAppSettingsVisibled: false,
       isPhraseVisible: false,
     };
   },
@@ -183,6 +199,15 @@ export default {
       const newIndex = Math.floor(Math.random() * (this.images.length - 1)); //decrease available indexes by one to exclude the currect image index
       this.imageIndex = this.imageIndex === newIndex ? newIndex + 1 : newIndex; //if we hit the current index, get the next image
     },
+    toggleAppSettings: function() {
+      this.isAppSettingsVisibled = !this.isAppSettingsVisibled;
+    },
+    toggleAudio: function() {
+      this.settingsDynamic = {
+        ...this.settingsDynamic,
+        audio: !this.settingsDynamic.audio,
+      };
+    },
     togglePhraseTag: function(phraseTag) {
       const phraseTagIndex = this.phraseTagsSelected.indexOf(phraseTag);
       this.phraseIndex = 0;
@@ -197,7 +222,9 @@ export default {
         .then((data) => data.json())
         .then((data) => {
           this.phrasesJson = data.phrases;
-          this.settings = data.settings || {};
+          const settings = data.settings || {};
+          this.settingsDynamic = settings;
+          this.settingsStatic = settings;
         });
       fetch(process.env.VUE_APP_TAGS_SOURCE)
         .then((data) => data.json())
@@ -257,6 +284,27 @@ button:focus {
   min-height: 100vh;
   flex-direction: column;
   justify-content: center;
+}
+
+.app-settings {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.app-settings-toggle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 15;
 }
 
 .bg-image {
@@ -325,12 +373,9 @@ button:focus {
   opacity: 0.9;
 }
 
-.phrase-tags {
-  position: absolute;
-  top: 0;
-  left: 0;
-  padding: 10px 100px 0 10px;
-  text-align: left;
+.container {
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .phrases-cnt {
