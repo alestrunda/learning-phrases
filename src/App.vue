@@ -47,24 +47,13 @@
 import ButtonToggle from "./components/ButtonToggle.vue";
 import Phrase from "./components/Phrase.vue";
 import { getPhraseTagText } from "./misc.js";
+import {
+  BACKGROUND_IMAGES,
+  BG_SWITCH_PHRASES_CNT,
+  SETTINGS_DEFAULTS,
+} from "./settings.js";
 
 import "../node_modules/@fortawesome/fontawesome-free/css/all.min.css";
-
-const BACKGROUND_IMAGES = [
-  "images/andyone-26591-unsplash.jpg",
-  "images/domenico-loia-310197-unsplash.jpg",
-  "images/hieu-vu-minh-91995-unsplash.jpg",
-  "images/ivo-rainha-764590-unsplash.jpg",
-  "images/lubomyr-myronyuk-606350-unsplash.jpg",
-  "images/michael-d-beckwith-609520-unsplash.jpg",
-  "images/photo-1520099078215-db50d947d060.jpg",
-  "images/rawpixel-323215-unsplash.jpg",
-  "images/rawpixel-561415-unsplash.jpg",
-  "images/rob-bye-325768-unsplash.jpg",
-  "images/sebas-ribas-310260-unsplash.jpg",
-  "images/thought-catalog-214785-unsplash.jpg",
-];
-const BG_SWITCH_PHRASES_CNT = 10;
 
 export default {
   name: "app",
@@ -100,48 +89,7 @@ export default {
     },
     phrasesAll: function() {
       if (!this.phrasesJson.length) return [];
-
-      //check for duplicates
-      const phrasesNoDuplicants = [
-        ...new Set(this.phrasesJson.map((phrase) => phrase.phrase)),
-      ];
-      const hasDuplicants =
-        phrasesNoDuplicants.length - this.phrasesJson.length > 0;
-      // eslint-disable-next-line
-      console.log(`Duplicates: ${hasDuplicants ? "yes" : "no"}`);
-      // eslint-disable-next-line
-      hasDuplicants && console.log(this.getDuplicantPhrases(phrases));
-
-      //check for missing translation
-      const phrasesNoTranslation = this.phrasesJson.filter(
-        (phrase) => !phrase.translation
-      );
-      // eslint-disable-next-line
-      console.log(
-        `Phrases without translation: ${
-          phrasesNoTranslation.length > 0 ? "yes" : "no"
-        }`
-      );
-      // eslint-disable-next-line
-      phrasesNoTranslation.length > 0 && console.log(phrasesNoTranslation);
-
-      //check for missimg trailing ./!/?
-      const phrasesMissingTrailingChar = this.phrasesJson.filter((phrase) => {
-        return (
-          !isTralingChar(phrase.phrase[phrase.phrase.length - 1]) ||
-          !isTralingChar(phrase.translation[phrase.translation.length - 1])
-        );
-      });
-      // eslint-disable-next-line
-      console.log(
-        `Phrases with missing traling character: ${
-          phrasesMissingTrailingChar.length > 0 ? "yes" : "no"
-        }`
-      );
-      phrasesMissingTrailingChar.length > 0 &&
-        // eslint-disable-next-line
-        console.log(phrasesMissingTrailingChar);
-
+      this.runPhraseChecks();
       return shuffle(this.phrasesJson);
     },
     phrasesLength: function() {
@@ -167,8 +115,8 @@ export default {
     getPhraseTagText,
     listenKeyPressing: function() {
       window.addEventListener("keydown", (e) => {
-        const KEYCODE_SPACE = 32;
-        if (e.keyCode !== KEYCODE_SPACE) return;
+        const SPACE_CHARACTER = " ";
+        if (e.key !== SPACE_CHARACTER) return;
         this.onContinue();
       });
     },
@@ -224,13 +172,62 @@ export default {
           this.phrasesJson = data.phrases;
           const settings = data.settings || {};
           this.settingsDynamic = settings;
-          this.settingsStatic = settings;
+          this.settingsStatic = { ...SETTINGS_DEFAULTS, ...settings };
         });
       fetch(process.env.VUE_APP_TAGS_SOURCE)
         .then((data) => data.json())
         .then((data) => {
           this.tagTitles = data;
         });
+    },
+    runPhraseChecks: function() {
+      this.settingsStatic.checkDuplications && this.checkDuplications();
+      this.settingsStatic.checkMissingTranslation &&
+        this.checkMissingTranslation();
+      this.settingsStatic.checkMissingTrailingCharacter &&
+        this.checkMissingTrailingCharacter();
+    },
+    checkMissingTrailingCharacter: function() {
+      //check for missimg trailing . / ! / ?
+      const phrasesMissingTrailingChar = this.phrasesJson.filter((phrase) => {
+        return (
+          !isTralingChar(phrase.phrase[phrase.phrase.length - 1]) ||
+          !isTralingChar(phrase.translation[phrase.translation.length - 1])
+        );
+      });
+      // eslint-disable-next-line
+      console.log(
+        `Phrases with missing traling character: ${
+          phrasesMissingTrailingChar.length > 0 ? "yes" : "no"
+        }`
+      );
+      phrasesMissingTrailingChar.length > 0 &&
+        // eslint-disable-next-line
+        console.log(phrasesMissingTrailingChar);
+    },
+    checkDuplications: function() {
+      const phrasesNoDuplicants = [
+        ...new Set(this.phrasesJson.map((phrase) => phrase.phrase)),
+      ];
+      const hasDuplicants =
+        phrasesNoDuplicants.length - this.phrasesJson.length > 0;
+      // eslint-disable-next-line
+      console.log(`Duplicates: ${hasDuplicants ? "yes" : "no"}`);
+      // eslint-disable-next-line
+      hasDuplicants && console.log(this.getDuplicantPhrases(phrases));
+    },
+    checkMissingTranslation: function() {
+      const phrasesNoTranslation = this.phrasesJson.filter(
+        (phrase) => !phrase.translation
+      );
+      // eslint-disable-next-line
+      console.log(
+        `Phrases without translation: ${
+          phrasesNoTranslation.length > 0 ? "yes" : "no"
+        }`
+      );
+      // eslint-disable-next-line
+      phrasesNoTranslation.length > 0 && console.log(phrasesNoTranslation);
     },
   },
 };
