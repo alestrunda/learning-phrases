@@ -1,42 +1,44 @@
 # Phrases English
 
-Tiny app to practise phrases, but it could be also single words... quite any text at all.
+Tiny Vue app to practise English phrases, but it could also be just single words... well quite any text at all.
 
-Images from unsplash.com
+Images from [unsplash.com](https://unsplash.com/)
+
+## Screenshots
 
 ![screen 1](http://files.alestrunda.cz/learning-phrases/1.jpg)
 
 ![screen 2](http://files.alestrunda.cz/learning-phrases/2.jpg)
 
-## Requirements
+## Get started
 
-Rename *phrases.sample.js* to just *phrases.js* and put your phrases in there.
+Rename `phrases.sample.js` to just `phrases.js` and put your phrases in there.
 
-Rename *tagTitles.sample.js* to just *tagTitles.js* and put any custom tag id>title mapping in there.
+Rename `tagTitles.sample.js` to just `tagTitles.js` and put any custom *tag id* -> *title* mapping in there.
 
 Now you can run the app.
 
-## Project setup
+### Project setup
 ```
 yarn install
 ```
 
-### Compiles and hot-reloads for development
+### Development mode
 ```
 yarn run serve
 ```
 
-### Compiles and minifies for production
+### Production build
 ```
 yarn run build
 ```
 
-### Run your tests
+### Tests
 ```
 yarn run test
 ```
 
-### Lints and fixes files
+### Linting
 ```
 yarn run lint
 ```
